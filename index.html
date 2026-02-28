@@ -781,8 +781,9 @@
         // ===== SUBWAY =====
         function fetchSubway() {
             if (!CONFIG.SUBWAY_API_KEY) { renderSubwayNoKey(); return; }
-            var url = CONFIG.SUBWAY_API_BASE + CONFIG.SUBWAY_API_KEY +
+            var apiUrl = CONFIG.SUBWAY_API_BASE + CONFIG.SUBWAY_API_KEY +
                 '/json/realtimeStationArrival/0/20/' + encodeURIComponent('종합운동장');
+            var url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
 
             xhr(url, function(err, data) {
                 if (err) { renderSubwayError(); return; }
