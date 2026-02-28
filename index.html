@@ -25,41 +25,39 @@
         }
 
         .dashboard {
-            display: -webkit-flex;
-            display: flex;
-            -webkit-flex-direction: column;
-            flex-direction: column;
-            height: 100%;
-            padding: 16px 20px 12px;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            padding: 14px 18px 10px;
+            overflow: hidden;
             background: -webkit-linear-gradient(top, #0e1218 0%, #0b0e13 40%, #0d1019 100%);
             background: linear-gradient(180deg, #0e1218 0%, #0b0e13 40%, #0d1019 100%);
         }
 
         /* ===== HEADER ===== */
         .header {
+            height: 44px;
             display: -webkit-flex;
             display: flex;
             -webkit-align-items: baseline;
             align-items: baseline;
-            margin-bottom: 16px;
-            padding: 0 2px 14px;
+            padding: 0 2px 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
         .header-clock {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 100;
             letter-spacing: 3px;
             color: #ffffff;
-            margin-right: 16px;
+            margin-right: 14px;
         }
 
         .header-date {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 400;
             color: #5a6a7a;
-            -webkit-flex: 1;
-            flex: 1;
+            -webkit-flex: 1 1 auto;
+            flex: 1 1 auto;
         }
 
         .header-live {
@@ -67,7 +65,7 @@
             display: flex;
             -webkit-align-items: center;
             align-items: center;
-            font-size: 11px;
+            font-size: 10px;
             color: #3a4a5a;
             letter-spacing: 1px;
         }
@@ -82,41 +80,53 @@
             animation: livePulse 2s ease-in-out infinite;
         }
 
-        /* ===== LAYOUT ===== */
+        /* ===== LAYOUT - absolute positioning for Safari 9 ===== */
         .main-row {
+            position: absolute;
+            top: 58px;
+            left: 18px;
+            right: 18px;
+            height: 280px;
             display: -webkit-flex;
             display: flex;
-            margin-bottom: 14px;
-            height: 310px;
         }
 
         .weather-card {
-            width: 280px;
+            width: 260px;
+            height: 280px;
             margin-right: 14px;
-            -webkit-flex-shrink: 0;
-            flex-shrink: 0;
+            -webkit-flex: 0 0 260px;
+            flex: 0 0 260px;
         }
 
         .subway-card {
-            -webkit-flex: 1;
-            flex: 1;
+            -webkit-flex: 1 1 0%;
+            flex: 1 1 0%;
+            height: 280px;
+            overflow: hidden;
         }
 
         .calendar-row {
-            -webkit-flex: 1;
-            flex: 1;
-            min-height: 0;
+            position: absolute;
+            top: 348px;
+            left: 18px;
+            right: 18px;
+            bottom: 36px;
+            overflow: hidden;
         }
 
         .footer {
-            height: 24px;
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            height: 22px;
             display: -webkit-flex;
             display: flex;
             -webkit-align-items: center;
             align-items: center;
             -webkit-justify-content: center;
             justify-content: center;
-            margin-top: 10px;
         }
 
         .footer-text {
@@ -129,17 +139,14 @@
         .card {
             background: -webkit-linear-gradient(top, #161d28, #131a24);
             background: linear-gradient(180deg, #161d28, #131a24);
-            border-radius: 16px;
+            border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             -webkit-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
-            padding: 18px 22px;
+            padding: 14px 18px;
             height: 100%;
             overflow: hidden;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-flex-direction: column;
-            flex-direction: column;
+            position: relative;
         }
 
         .card-header {
@@ -170,10 +177,7 @@
         }
 
         .card-body {
-            -webkit-flex: 1;
-            flex: 1;
             overflow: hidden;
-            position: relative;
         }
 
         /* ===== WEATHER ===== */
@@ -685,19 +689,47 @@
 
         function getWeatherInfo(code) { return weatherCodes[code] || ['알 수 없음', '?']; }
 
+        var airData = null;
+
         function fetchWeather() {
             var apiUrl = 'https://api.open-meteo.com/v1/forecast' +
                 '?latitude=37.5665&longitude=126.9780' +
-                '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day' +
+                '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code' +
                 '&daily=temperature_2m_max,temperature_2m_min,weather_code' +
                 '&timezone=Asia%2FSeoul&forecast_days=1';
             var url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
 
             xhr(url, function(err, data) {
                 if (err) { renderWeatherError(); return; }
-                renderWeather(data);
+                fetchAirQuality(data);
+            });
+        }
+
+        function fetchAirQuality(weatherData) {
+            var aqUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality' +
+                '?latitude=37.5665&longitude=126.9780&current=pm2_5,pm10';
+            var url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(aqUrl);
+
+            xhr(url, function(err, data) {
+                if (!err && data && data.current) {
+                    airData = data.current;
+                }
+                renderWeather(weatherData);
                 updateLastRefresh();
             });
+        }
+
+        function pmLevel(type, val) {
+            if (type === 'pm25') {
+                if (val <= 15) return ['좋음', '#4ade80'];
+                if (val <= 35) return ['보통', '#7aaddf'];
+                if (val <= 75) return ['나쁨', '#f59e0b'];
+                return ['매우나쁨', '#ef4444'];
+            }
+            if (val <= 30) return ['좋음', '#4ade80'];
+            if (val <= 80) return ['보통', '#7aaddf'];
+            if (val <= 150) return ['나쁨', '#f59e0b'];
+            return ['매우나쁨', '#ef4444'];
         }
 
         function renderWeather(data) {
@@ -706,10 +738,22 @@
             var temp = Math.round(c.temperature_2m);
             var feels = Math.round(c.apparent_temperature);
             var humidity = Math.round(c.relative_humidity_2m);
-            var wind = c.wind_speed_10m.toFixed(1);
             var info = getWeatherInfo(c.weather_code);
             var hi = Math.round(d.temperature_2m_max[0]);
             var lo = Math.round(d.temperature_2m_min[0]);
+
+            var dustHtml = '';
+            if (airData) {
+                var pm25 = Math.round(airData.pm2_5);
+                var pm10 = Math.round(airData.pm10);
+                var lv25 = pmLevel('pm25', pm25);
+                var lv10 = pmLevel('pm10', pm10);
+                dustHtml =
+                    '<div class="weather-meta-row"><span class="weather-meta-label">미세먼지</span>' +
+                        '<span class="weather-meta-val">' + pm10 + ' <span style="color:' + lv10[1] + '">' + lv10[0] + '</span></span></div>' +
+                    '<div class="weather-meta-row"><span class="weather-meta-label">초미세먼지</span>' +
+                        '<span class="weather-meta-val">' + pm25 + ' <span style="color:' + lv25[1] + '">' + lv25[0] + '</span></span></div>';
+            }
 
             $('weather-content').innerHTML =
                 '<div class="weather-main">' +
@@ -724,7 +768,7 @@
                 '<div class="weather-meta">' +
                     '<div class="weather-meta-row"><span class="weather-meta-label">체감</span><span class="weather-meta-val">' + feels + '&deg;</span></div>' +
                     '<div class="weather-meta-row"><span class="weather-meta-label">습도</span><span class="weather-meta-val">' + humidity + '%</span></div>' +
-                    '<div class="weather-meta-row"><span class="weather-meta-label">바람</span><span class="weather-meta-val">' + wind + ' m/s</span></div>' +
+                    dustHtml +
                 '</div>';
         }
 
