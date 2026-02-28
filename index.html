@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1024, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, 'Helvetica Neue', sans-serif;
+            background: #0b0e13;
+            color: #e4e8ee;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .dashboard {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            height: 100%;
+            padding: 16px 20px 12px;
+            background: -webkit-linear-gradient(top, #0e1218 0%, #0b0e13 40%, #0d1019 100%);
+            background: linear-gradient(180deg, #0e1218 0%, #0b0e13 40%, #0d1019 100%);
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-align-items: baseline;
+            align-items: baseline;
+            margin-bottom: 16px;
+            padding: 0 2px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .header-clock {
+            font-size: 36px;
+            font-weight: 100;
+            letter-spacing: 3px;
+            color: #ffffff;
+            margin-right: 16px;
+        }
+
+        .header-date {
+            font-size: 14px;
+            font-weight: 400;
+            color: #5a6a7a;
+            -webkit-flex: 1;
+            flex: 1;
+        }
+
+        .header-live {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-align-items: center;
+            align-items: center;
+            font-size: 11px;
+            color: #3a4a5a;
+            letter-spacing: 1px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #34c759;
+            margin-right: 6px;
+            -webkit-animation: livePulse 2s ease-in-out infinite;
+            animation: livePulse 2s ease-in-out infinite;
+        }
+
+        /* ===== LAYOUT ===== */
+        .main-row {
+            display: -webkit-flex;
+            display: flex;
+            margin-bottom: 14px;
+            height: 310px;
+        }
+
+        .weather-card {
+            width: 280px;
+            margin-right: 14px;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+        }
+
+        .subway-card {
+            -webkit-flex: 1;
+            flex: 1;
+        }
+
+        .calendar-row {
+            -webkit-flex: 1;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .footer {
+            height: 24px;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .footer-text {
+            font-size: 10px;
+            color: #2d3a4a;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== CARD ===== */
+        .card {
+            background: -webkit-linear-gradient(top, #161d28, #131a24);
+            background: linear-gradient(180deg, #161d28, #131a24);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            -webkit-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+            padding: 18px 22px;
+            height: 100%;
+            overflow: hidden;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-align-items: center;
+            align-items: center;
+            margin-bottom: 14px;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+        }
+
+        .card-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #4a5a6a;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .card-badge {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .card-body {
+            -webkit-flex: 1;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ===== WEATHER ===== */
+        .weather-main {
+            text-align: center;
+            padding: 4px 0 0;
+        }
+
+        .weather-icon-large {
+            font-size: 52px;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .weather-temp {
+            font-size: 56px;
+            font-weight: 100;
+            letter-spacing: -3px;
+            line-height: 1.1;
+            color: #ffffff;
+        }
+
+        .weather-temp .unit {
+            font-size: 22px;
+            font-weight: 200;
+            color: #4a5a6a;
+            vertical-align: top;
+        }
+
+        .weather-desc {
+            font-size: 14px;
+            color: #5a6a7a;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .weather-hilo {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-justify-content: center;
+            justify-content: center;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #4a5a6a;
+        }
+
+        .weather-hilo-item {
+            margin: 0 10px;
+        }
+
+        .weather-hilo-item .v {
+            font-weight: 600;
+        }
+
+        .weather-hilo-item.hi .v { color: #e86b6b; }
+        .weather-hilo-item.lo .v { color: #6bb3e8; }
+
+        .weather-meta {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .weather-meta-row {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-justify-content: space-between;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        .weather-meta-label {
+            color: #3d4d5d;
+        }
+
+        .weather-meta-val {
+            color: #7a8a9a;
+            font-weight: 600;
+        }
+
+        /* ===== SUBWAY ===== */
+        .subway-line-bar {
+            height: 3px;
+            border-radius: 2px;
+            background: -webkit-linear-gradient(left, #d4a43a, #c4963a 50%, rgba(196,150,58,0.2));
+            background: linear-gradient(90deg, #d4a43a, #c4963a 50%, rgba(196,150,58,0.2));
+            margin-bottom: 14px;
+        }
+
+        .subway-list {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+        }
+
+        .arrival-item {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-align-items: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            -webkit-animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .arrival-type-bar {
+            width: 3px;
+            height: 36px;
+            border-radius: 2px;
+            background: #d4a43a;
+            margin-right: 14px;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+        }
+
+        .arrival-normal .arrival-type-bar {
+            background: #3d4d5d;
+        }
+
+        .arrival-info {
+            -webkit-flex: 1;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .arrival-dest {
+            font-size: 14px;
+            font-weight: 500;
+            color: #c8d0d8;
+            margin-bottom: 3px;
+        }
+
+        .badge-express {
+            display: inline-block;
+            background: rgba(212, 164, 58, 0.15);
+            color: #d4a43a;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-normal {
+            display: inline-block;
+            background: rgba(90, 106, 122, 0.15);
+            color: #5a6a7a;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
+        .arrival-normal {
+            opacity: 0.65;
+        }
+
+        .arrival-detail {
+            font-size: 11px;
+            color: #3d4d5d;
+        }
+
+        .arrival-time {
+            text-align: right;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .arrival-time-msg {
+            font-size: 16px;
+            font-weight: 600;
+            color: #7aaddf;
+        }
+
+        .arrival-time-msg.arriving {
+            color: #4ade80;
+            -webkit-animation: pulse 1.5s ease-in-out infinite;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* ===== CALENDAR ===== */
+        .calendar-list {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            height: 100%;
+        }
+
+        .calendar-event {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-align-items: center;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            -webkit-animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .cal-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4a8ed4;
+            margin-right: 14px;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+        }
+
+        .cal-dot.allday {
+            background: #d4a43a;
+        }
+
+        .calendar-time-col {
+            width: 90px;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+            margin-right: 14px;
+        }
+
+        .calendar-time {
+            font-size: 14px;
+            font-weight: 600;
+            color: #7a8a9a;
+            line-height: 1.3;
+        }
+
+        .calendar-time-end {
+            font-size: 11px;
+            color: #3d4d5d;
+        }
+
+        .calendar-event-allday {
+            font-size: 11px;
+            color: #d4a43a;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-event-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #c8d0d8;
+            line-height: 1.3;
+            -webkit-flex: 1;
+            flex: 1;
+        }
+
+        /* ===== STATES ===== */
+        .loading {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            height: 100%;
+            color: #3d4d5d;
+            font-size: 12px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(74, 142, 212, 0.1);
+            border-top-color: #4a8ed4;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            -webkit-animation: spin 0.8s linear infinite;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .empty-state {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            height: 100%;
+            color: #3d4d5d;
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .error-state {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            height: 100%;
+            color: #4a5a6a;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .error-icon { font-size: 22px; margin-bottom: 8px; opacity: 0.5; }
+        .error-msg { margin-bottom: 10px; line-height: 1.5; }
+
+        .retry-btn {
+            background: rgba(74, 142, 212, 0.1);
+            color: #4a8ed4;
+            border: 1px solid rgba(74, 142, 212, 0.15);
+            padding: 5px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        .retry-btn:active { background: rgba(74, 142, 212, 0.2); }
+
+        .config-hint {
+            color: #3d4d5d;
+            font-size: 11px;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        .config-hint code {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-family: 'Menlo', monospace;
+            font-size: 10px;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @-webkit-keyframes spin {
+            to { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @-webkit-keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @-webkit-keyframes fadeIn {
+            from { opacity: 0; -webkit-transform: translateY(4px); }
+            to { opacity: 1; -webkit-transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @-webkit-keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-clock" id="header-clock">--:--:--</div>
+            <div class="header-date" id="header-date"></div>
+            <div class="header-live">
+                <span class="live-dot"></span>
+                LIVE
+            </div>
+        </div>
+
+        <!-- Top Row -->
+        <div class="main-row">
+            <!-- Weather -->
+            <div class="weather-card">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-label">Seoul Weather</span>
+                    </div>
+                    <div class="card-body" id="weather-content">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subway -->
+            <div class="subway-card">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-label">종합운동장</span>
+                        <span class="card-badge" style="background:rgba(212,164,58,0.12);color:#d4a43a;">9호선 &middot; 김포공항</span>
+                    </div>
+                    <div class="subway-line-bar"></div>
+                    <div class="card-body" id="subway-content">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar-row">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-label">오늘의 일정</span>
+                    <span class="card-badge" id="calendar-date" style="background:rgba(74,142,212,0.1);color:#4a8ed4;"></span>
+                </div>
+                <div class="card-body" id="calendar-content">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <span class="footer-text">UPDATED <span id="last-update">--:--</span></span>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ===== CONFIGURATION =====
+        var CONFIG = {
+            SUBWAY_API_KEY: '636b46446c6b6576383963595a7976',
+            CALENDAR_ICAL_URL: 'https://calendar.google.com/calendar/ical/49a7qv0ovbndru2gdiirhditq8%40group.calendar.google.com/private-595c535a853512550a101afab2eb1756/basic.ics',
+            CLOCK_REFRESH: 1000,
+            SUBWAY_REFRESH: 30000,
+            WEATHER_REFRESH: 600000,
+            CALENDAR_REFRESH: 300000,
+            SUBWAY_API_BASE: 'http://swopenAPI.seoul.go.kr/api/subway/'
+        };
+
+        // ===== UTILITIES =====
+        function $(id) { return document.getElementById(id); }
+        function padZero(n) { return n < 10 ? '0' + n : '' + n; }
+
+        function formatTime(d) {
+            return padZero(d.getHours()) + ':' + padZero(d.getMinutes()) + ':' + padZero(d.getSeconds());
+        }
+
+        function formatTimeShort(d) {
+            return padZero(d.getHours()) + ':' + padZero(d.getMinutes());
+        }
+
+        function formatDate(d) {
+            var days = ['일', '월', '화', '수', '목', '금', '토'];
+            return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
+        }
+
+        function xhr(url, callback) {
+            var req = new XMLHttpRequest();
+            req.open('GET', url, true);
+            req.onreadystatechange = function() {
+                if (req.readyState === 4) {
+                    if (req.status === 200) {
+                        try { callback(null, JSON.parse(req.responseText)); }
+                        catch (e) { callback(e, null); }
+                    } else {
+                        callback(new Error('HTTP ' + req.status), null);
+                    }
+                }
+            };
+            req.onerror = function() { callback(new Error('Network error'), null); };
+            req.send();
+        }
+
+        function updateLastRefresh() {
+            $('last-update').innerHTML = formatTimeShort(new Date());
+        }
+
+        // ===== WEATHER =====
+        var weatherCodes = {
+            0: ['맑음', '☀'], 1: ['대체로 맑음', '🌤'], 2: ['구름 조금', '⛅'], 3: ['흐림', '☁'],
+            45: ['안개', '🌫'], 48: ['안개', '🌫'],
+            51: ['가벼운 이슬비', '🌦'], 53: ['이슬비', '🌧'], 55: ['강한 이슬비', '🌧'],
+            56: ['살얼음 이슬비', '🌧'], 57: ['살얼음 이슬비', '🌧'],
+            61: ['약한 비', '🌧'], 63: ['비', '🌧'], 65: ['강한 비', '🌧'],
+            66: ['살얼음 비', '🌧'], 67: ['강한 살얼음 비', '🌧'],
+            71: ['약한 눈', '🌨'], 73: ['눈', '❄'], 75: ['강한 눈', '❄'], 77: ['싸락눈', '❄'],
+            80: ['소나기', '🌦'], 81: ['소나기', '🌧'], 82: ['강한 소나기', '🌧'],
+            85: ['약한 눈보라', '🌨'], 86: ['눈보라', '❄'],
+            95: ['뇌우', '⛈'], 96: ['우박 뇌우', '⛈'], 99: ['우박 뇌우', '⛈']
+        };
+
+        function getWeatherInfo(code) { return weatherCodes[code] || ['알 수 없음', '?']; }
+
+        function fetchWeather() {
+            var url = 'https://api.open-meteo.com/v1/forecast' +
+                '?latitude=37.5665&longitude=126.9780' +
+                '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day' +
+                '&daily=temperature_2m_max,temperature_2m_min,weather_code' +
+                '&timezone=Asia%2FSeoul&forecast_days=1';
+
+            xhr(url, function(err, data) {
+                if (err) { renderWeatherError(); return; }
+                renderWeather(data);
+                updateLastRefresh();
+            });
+        }
+
+        function renderWeather(data) {
+            var c = data.current;
+            var d = data.daily;
+            var temp = Math.round(c.temperature_2m);
+            var feels = Math.round(c.apparent_temperature);
+            var humidity = Math.round(c.relative_humidity_2m);
+            var wind = c.wind_speed_10m.toFixed(1);
+            var info = getWeatherInfo(c.weather_code);
+            var hi = Math.round(d.temperature_2m_max[0]);
+            var lo = Math.round(d.temperature_2m_min[0]);
+
+            $('weather-content').innerHTML =
+                '<div class="weather-main">' +
+                    '<div class="weather-icon-large">' + info[1] + '</div>' +
+                    '<div class="weather-temp">' + temp + '<span class="unit">&deg;</span></div>' +
+                    '<div class="weather-desc">' + info[0] + '</div>' +
+                    '<div class="weather-hilo">' +
+                        '<span class="weather-hilo-item hi"><span class="v">' + hi + '&deg;</span> 최고</span>' +
+                        '<span class="weather-hilo-item lo"><span class="v">' + lo + '&deg;</span> 최저</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="weather-meta">' +
+                    '<div class="weather-meta-row"><span class="weather-meta-label">체감</span><span class="weather-meta-val">' + feels + '&deg;</span></div>' +
+                    '<div class="weather-meta-row"><span class="weather-meta-label">습도</span><span class="weather-meta-val">' + humidity + '%</span></div>' +
+                    '<div class="weather-meta-row"><span class="weather-meta-label">바람</span><span class="weather-meta-val">' + wind + ' m/s</span></div>' +
+                '</div>';
+        }
+
+        function renderWeatherError() {
+            $('weather-content').innerHTML =
+                '<div class="error-state"><div class="error-icon">&#9888;</div><div class="error-msg">날씨를 불러올 수 없습니다</div>' +
+                '<button class="retry-btn" onclick="window._retryWeather()">다시 시도</button></div>';
+        }
+        window._retryWeather = fetchWeather;
+
+        // ===== SUBWAY =====
+        function fetchSubway() {
+            if (!CONFIG.SUBWAY_API_KEY) { renderSubwayNoKey(); return; }
+            var url = CONFIG.SUBWAY_API_BASE + CONFIG.SUBWAY_API_KEY +
+                '/json/realtimeStationArrival/0/20/' + encodeURIComponent('종합운동장');
+
+            xhr(url, function(err, data) {
+                if (err) { renderSubwayError(); return; }
+                if (data.realtimeArrivalList) {
+                    renderSubway(filterLine9Gimpo(data.realtimeArrivalList));
+                } else if (data.errorMessage && data.errorMessage.code === 'INFO-200') {
+                    renderSubwayEmpty();
+                } else { renderSubwayError(); }
+                updateLastRefresh();
+            });
+        }
+
+        function filterLine9Gimpo(list) {
+            var results = [];
+            for (var i = 0; i < list.length; i++) {
+                var t = list[i];
+                if (t.subwayId === '1009' &&
+                    (t.bstatnNm === '김포공항' || t.bstatnNm === '개화')) {
+                    results.push(t);
+                }
+            }
+            results.sort(function(a, b) { return (a.ordkey || '').localeCompare(b.ordkey || ''); });
+            return results;
+        }
+
+        function isArrivingSoon(msg) {
+            if (!msg) return false;
+            return msg.indexOf('도착') !== -1 || msg.indexOf('진입') !== -1 ||
+                   msg.indexOf('출발') !== -1 || msg.indexOf('전역') !== -1;
+        }
+
+        function renderSubway(trains) {
+            if (trains.length === 0) { renderSubwayEmpty(); return; }
+            var html = '<div class="subway-list">';
+            for (var i = 0; i < trains.length; i++) {
+                var t = trains[i];
+                var msg = t.arvlMsg2 || '';
+                var detail = t.arvlMsg3 || '';
+                var dest = t.bstatnNm || '김포공항';
+                var isExpress = t.btrainSttus === '급행';
+                var badge = isExpress ? '<span class="badge-express">급행</span>' : '<span class="badge-normal">일반</span>';
+                var cls = 'arrival-item' + (isExpress ? '' : ' arrival-normal');
+
+                html += '<div class="' + cls + '">' +
+                    '<div class="arrival-type-bar"></div>' +
+                    '<div class="arrival-info">' +
+                        '<div class="arrival-dest">' + dest + '행 ' + badge + '</div>' +
+                        '<div class="arrival-detail">' + detail + '</div>' +
+                    '</div>' +
+                    '<div class="arrival-time">' +
+                        '<div class="arrival-time-msg' + (isArrivingSoon(msg) ? ' arriving' : '') + '">' + msg + '</div>' +
+                    '</div>' +
+                '</div>';
+            }
+            html += '</div>';
+            $('subway-content').innerHTML = html;
+        }
+
+        function renderSubwayEmpty() {
+            $('subway-content').innerHTML = '<div class="empty-state">현재 운행 중인<br>열차가 없습니다</div>';
+        }
+        function renderSubwayError() {
+            $('subway-content').innerHTML =
+                '<div class="error-state"><div class="error-icon">&#9888;</div><div class="error-msg">도착 정보를 불러올 수 없습니다</div>' +
+                '<button class="retry-btn" onclick="window._retrySubway()">다시 시도</button></div>';
+        }
+        function renderSubwayNoKey() {
+            $('subway-content').innerHTML =
+                '<div class="error-state"><div class="error-icon">&#128273;</div><div class="error-msg">API 키를 설정해주세요</div>' +
+                '<div class="config-hint"><code>CONFIG.SUBWAY_API_KEY</code><br>data.seoul.go.kr</div></div>';
+        }
+        window._retrySubway = fetchSubway;
+
+        // ===== CALENDAR (iCal) =====
+        function fetchCalendar() {
+            if (!CONFIG.CALENDAR_ICAL_URL) { renderCalendarNoUrl(); return; }
+            var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(CONFIG.CALENDAR_ICAL_URL);
+            var req = new XMLHttpRequest();
+            req.open('GET', proxyUrl, true);
+            req.onreadystatechange = function() {
+                if (req.readyState === 4) {
+                    if (req.status === 200) {
+                        renderCalendar(filterToday(parseICal(req.responseText)));
+                        updateLastRefresh();
+                    } else { renderCalendarError(); }
+                }
+            };
+            req.onerror = function() { renderCalendarError(); };
+            req.send();
+        }
+
+        function parseICal(text) {
+            var events = [];
+            var blocks = text.split('BEGIN:VEVENT');
+            for (var i = 1; i < blocks.length; i++) {
+                var block = blocks[i].split('END:VEVENT')[0];
+                var ev = {};
+                ev.title = getICalProp(block, 'SUMMARY') || '(제목 없음)';
+                var dtstart = getICalLine(block, 'DTSTART');
+                var dtend = getICalLine(block, 'DTEND');
+                if (dtstart && dtstart.indexOf('VALUE=DATE') !== -1) {
+                    ev.allDay = true;
+                    ev.start = parseICalDate(dtstart.split(':').pop());
+                    ev.end = dtend ? parseICalDate(dtend.split(':').pop()) : ev.start;
+                } else {
+                    ev.allDay = false;
+                    ev.start = parseICalDateTime(getICalProp(block, 'DTSTART'));
+                    ev.end = parseICalDateTime(getICalProp(block, 'DTEND'));
+                }
+                if (ev.start) events.push(ev);
+            }
+            return events;
+        }
+
+        function getICalProp(block, name) {
+            var lines = block.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].replace(/\r/g, '');
+                if (line.indexOf(name + ':') === 0) return line.substring(name.length + 1);
+                if (line.indexOf(name + ';') === 0) {
+                    var ci = line.indexOf(':');
+                    if (ci !== -1) return line.substring(ci + 1);
+                }
+            }
+            return '';
+        }
+
+        function getICalLine(block, name) {
+            var lines = block.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].replace(/\r/g, '');
+                if (line.indexOf(name) === 0) return line;
+            }
+            return '';
+        }
+
+        function parseICalDate(str) {
+            if (!str || str.length < 8) return null;
+            return new Date(parseInt(str.substring(0,4),10), parseInt(str.substring(4,6),10)-1, parseInt(str.substring(6,8),10));
+        }
+
+        function parseICalDateTime(str) {
+            if (!str || str.length < 15) return null;
+            var y=parseInt(str.substring(0,4),10), m=parseInt(str.substring(4,6),10)-1, d=parseInt(str.substring(6,8),10);
+            var h=parseInt(str.substring(9,11),10), mi=parseInt(str.substring(11,13),10), s=parseInt(str.substring(13,15),10);
+            if (str.charAt(15) === 'Z') return new Date(Date.UTC(y,m,d,h,mi,s));
+            return new Date(y,m,d,h,mi,s);
+        }
+
+        function filterToday(events) {
+            var now = new Date();
+            var s = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var e = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1);
+            var r = [];
+            for (var i = 0; i < events.length; i++) {
+                if (events[i].start < e && (events[i].end || events[i].start) > s) r.push(events[i]);
+            }
+            r.sort(function(a,b) {
+                if (a.allDay && !b.allDay) return -1;
+                if (!a.allDay && b.allDay) return 1;
+                return a.start - b.start;
+            });
+            return r;
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function renderCalendar(events) {
+            if (events.length === 0) {
+                $('calendar-content').innerHTML = '<div class="empty-state">오늘은 일정이 없습니다</div>';
+                return;
+            }
+            var html = '<div class="calendar-list">';
+            for (var i = 0; i < events.length; i++) {
+                var ev = events[i];
+                html += '<div class="calendar-event">';
+                html += '<div class="cal-dot' + (ev.allDay ? ' allday' : '') + '"></div>';
+                html += '<div class="calendar-time-col">';
+                if (ev.allDay) {
+                    html += '<span class="calendar-event-allday">ALL DAY</span>';
+                } else {
+                    html += '<span class="calendar-time">' + padZero(ev.start.getHours()) + ':' + padZero(ev.start.getMinutes()) + '</span>';
+                    html += ' <span class="calendar-time-end">~ ' + padZero(ev.end.getHours()) + ':' + padZero(ev.end.getMinutes()) + '</span>';
+                }
+                html += '</div>';
+                html += '<div class="calendar-event-title">' + escapeHtml(ev.title) + '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+            $('calendar-content').innerHTML = html;
+        }
+
+        function renderCalendarError() {
+            $('calendar-content').innerHTML =
+                '<div class="error-state"><div class="error-icon">&#9888;</div><div class="error-msg">캘린더를 불러올 수 없습니다</div>' +
+                '<button class="retry-btn" onclick="window._retryCalendar()">다시 시도</button></div>';
+        }
+        function renderCalendarNoUrl() {
+            $('calendar-content').innerHTML =
+                '<div class="error-state"><div class="error-icon">&#128273;</div><div class="error-msg">iCal 주소를 설정해주세요</div>' +
+                '<div class="config-hint">Google Calendar 설정 &gt; 캘린더 통합<br><code>CONFIG.CALENDAR_ICAL_URL</code></div></div>';
+        }
+        window._retryCalendar = fetchCalendar;
+
+        // ===== CLOCK =====
+        function updateClock() {
+            var now = new Date();
+            $('header-clock').innerHTML = formatTime(now);
+            $('header-date').innerHTML = formatDate(now);
+        }
+
+        function updateCalendarDate() {
+            var now = new Date();
+            $('calendar-date').innerHTML = (now.getMonth()+1) + '월 ' + now.getDate() + '일';
+        }
+
+        // ===== INIT =====
+        function init() {
+            updateClock();
+            updateCalendarDate();
+            fetchWeather();
+            fetchSubway();
+            fetchCalendar();
+            setInterval(updateClock, CONFIG.CLOCK_REFRESH);
+            setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
+            setInterval(fetchSubway, CONFIG.SUBWAY_REFRESH);
+            setInterval(fetchCalendar, CONFIG.CALENDAR_REFRESH);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else { init(); }
+    })();
+    </script>
+</body>
+</html>
