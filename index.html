@@ -652,6 +652,11 @@
             return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
         }
 
+        var PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?'
+        ];
+
         function xhr(url, callback) {
             var req = new XMLHttpRequest();
             req.open('GET', url, true);
@@ -666,6 +671,32 @@
                 }
             };
             req.onerror = function() { callback(new Error('Network error'), null); };
+            req.send();
+        }
+
+        function xhrProxy(apiUrl, callback, idx) {
+            if (idx === undefined) idx = 0;
+            if (idx >= PROXIES.length) { callback(new Error('All proxies failed'), null); return; }
+            var url = PROXIES[idx] + encodeURIComponent(apiUrl);
+            xhr(url, function(err, data) {
+                if (err) { xhrProxy(apiUrl, callback, idx + 1); }
+                else { callback(null, data); }
+            });
+        }
+
+        function xhrProxyRaw(apiUrl, callback, idx) {
+            if (idx === undefined) idx = 0;
+            if (idx >= PROXIES.length) { callback(new Error('All proxies failed'), null); return; }
+            var url = PROXIES[idx] + encodeURIComponent(apiUrl);
+            var req = new XMLHttpRequest();
+            req.open('GET', url, true);
+            req.onreadystatechange = function() {
+                if (req.readyState === 4) {
+                    if (req.status === 200) { callback(null, req.responseText); }
+                    else { xhrProxyRaw(apiUrl, callback, idx + 1); }
+                }
+            };
+            req.onerror = function() { xhrProxyRaw(apiUrl, callback, idx + 1); };
             req.send();
         }
 
@@ -697,9 +728,8 @@
                 '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code' +
                 '&daily=temperature_2m_max,temperature_2m_min,weather_code' +
                 '&timezone=Asia%2FSeoul&forecast_days=1';
-            var url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
 
-            xhr(url, function(err, data) {
+            xhrProxy(apiUrl, function(err, data) {
                 if (err) { renderWeatherError(); return; }
                 fetchAirQuality(data);
             });
@@ -708,9 +738,8 @@
         function fetchAirQuality(weatherData) {
             var aqUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality' +
                 '?latitude=37.5665&longitude=126.9780&current=pm2_5,pm10';
-            var url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(aqUrl);
 
-            xhr(url, function(err, data) {
+            xhrProxy(aqUrl, function(err, data) {
                 if (!err && data && data.current) {
                     airData = data.current;
                 }
@@ -783,9 +812,8 @@
             if (!CONFIG.SUBWAY_API_KEY) { renderSubwayNoKey(); return; }
             var apiUrl = CONFIG.SUBWAY_API_BASE + CONFIG.SUBWAY_API_KEY +
                 '/json/realtimeStationArrival/0/20/' + encodeURIComponent('종합운동장');
-            var url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
 
-            xhr(url, function(err, data) {
+            xhrProxy(apiUrl, function(err, data) {
                 if (err) { renderSubwayError(); return; }
                 if (data.realtimeArrivalList) {
                     renderSubway(filterLine9Gimpo(data.realtimeArrivalList));
@@ -860,19 +888,12 @@
         // ===== CALENDAR (iCal) =====
         function fetchCalendar() {
             if (!CONFIG.CALENDAR_ICAL_URL) { renderCalendarNoUrl(); return; }
-            var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(CONFIG.CALENDAR_ICAL_URL);
-            var req = new XMLHttpRequest();
-            req.open('GET', proxyUrl, true);
-            req.onreadystatechange = function() {
-                if (req.readyState === 4) {
-                    if (req.status === 200) {
-                        renderCalendar(filterToday(parseICal(req.responseText)));
-                        updateLastRefresh();
-                    } else { renderCalendarError(); }
-                }
-            };
-            req.onerror = function() { renderCalendarError(); };
-            req.send();
+
+            xhrProxyRaw(CONFIG.CALENDAR_ICAL_URL, function(err, text) {
+                if (err) { renderCalendarError(); return; }
+                renderCalendar(filterToday(parseICal(text)));
+                updateLastRefresh();
+            });
         }
 
         function parseICal(text) {
