@@ -686,11 +686,12 @@
         function getWeatherInfo(code) { return weatherCodes[code] || ['알 수 없음', '?']; }
 
         function fetchWeather() {
-            var url = 'https://api.open-meteo.com/v1/forecast' +
+            var apiUrl = 'https://api.open-meteo.com/v1/forecast' +
                 '?latitude=37.5665&longitude=126.9780' +
                 '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day' +
                 '&daily=temperature_2m_max,temperature_2m_min,weather_code' +
                 '&timezone=Asia%2FSeoul&forecast_days=1';
+            var url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
 
             xhr(url, function(err, data) {
                 if (err) { renderWeatherError(); return; }
