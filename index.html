@@ -187,13 +187,13 @@
         }
 
         .weather-icon-large {
-            font-size: 52px;
+            font-size: 38px;
             line-height: 1;
-            margin-bottom: 2px;
+            margin-bottom: 0;
         }
 
         .weather-temp {
-            font-size: 56px;
+            font-size: 44px;
             font-weight: 100;
             letter-spacing: -3px;
             line-height: 1.1;
@@ -201,16 +201,16 @@
         }
 
         .weather-temp .unit {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 200;
             color: #4a5a6a;
             vertical-align: top;
         }
 
         .weather-desc {
-            font-size: 14px;
+            font-size: 13px;
             color: #5a6a7a;
-            margin-top: 2px;
+            margin-top: 0;
             font-weight: 500;
         }
 
@@ -219,13 +219,13 @@
             display: flex;
             -webkit-justify-content: center;
             justify-content: center;
-            margin-top: 12px;
-            font-size: 13px;
+            margin-top: 8px;
+            font-size: 12px;
             color: #4a5a6a;
         }
 
         .weather-hilo-item {
-            margin: 0 10px;
+            margin: 0 8px;
         }
 
         .weather-hilo-item .v {
@@ -236,8 +236,8 @@
         .weather-hilo-item.lo .v { color: #6bb3e8; }
 
         .weather-meta {
-            margin-top: 14px;
-            padding-top: 12px;
+            margin-top: 10px;
+            padding-top: 8px;
             border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
 
@@ -247,7 +247,7 @@
             -webkit-justify-content: space-between;
             justify-content: space-between;
             font-size: 12px;
-            padding: 4px 0;
+            padding: 3px 0;
         }
 
         .weather-meta-label {
@@ -766,8 +766,7 @@
                     '</div>' +
                 '</div>' +
                 '<div class="weather-meta">' +
-                    '<div class="weather-meta-row"><span class="weather-meta-label">체감</span><span class="weather-meta-val">' + feels + '&deg;</span></div>' +
-                    '<div class="weather-meta-row"><span class="weather-meta-label">습도</span><span class="weather-meta-val">' + humidity + '%</span></div>' +
+                    '<div class="weather-meta-row"><span class="weather-meta-label">체감 ' + feels + '&deg;</span><span class="weather-meta-val">습도 ' + humidity + '%</span></div>' +
                     dustHtml +
                 '</div>';
         }
