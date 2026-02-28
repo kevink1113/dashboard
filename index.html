@@ -652,16 +652,14 @@
             return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
         }
 
-        var PROXIES = [
-            'https://api.allorigins.win/raw?url=',
-            'https://corsproxy.io/?'
-        ];
-
-        function xhr(url, callback) {
+        function xhr(url, callback, timeout) {
             var req = new XMLHttpRequest();
+            var done = false;
             req.open('GET', url, true);
             req.onreadystatechange = function() {
+                if (done) return;
                 if (req.readyState === 4) {
+                    done = true;
                     if (req.status === 200) {
                         try { callback(null, JSON.parse(req.responseText)); }
                         catch (e) { callback(e, null); }
@@ -670,33 +668,64 @@
                     }
                 }
             };
-            req.onerror = function() { callback(new Error('Network error'), null); };
+            req.onerror = function() { if (!done) { done = true; callback(new Error('Network error'), null); } };
+            if (timeout) {
+                setTimeout(function() { if (!done) { done = true; req.abort(); callback(new Error('Timeout'), null); } }, timeout);
+            }
             req.send();
         }
 
-        function xhrProxy(apiUrl, callback, idx) {
-            if (idx === undefined) idx = 0;
-            if (idx >= PROXIES.length) { callback(new Error('All proxies failed'), null); return; }
-            var url = PROXIES[idx] + encodeURIComponent(apiUrl);
+        function xhrProxy(apiUrl, callback, useGet) {
+            var url = useGet
+                ? 'https://api.allorigins.win/get?url=' + encodeURIComponent(apiUrl)
+                : 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
+
             xhr(url, function(err, data) {
-                if (err) { xhrProxy(apiUrl, callback, idx + 1); }
-                else { callback(null, data); }
-            });
+                if (err) {
+                    if (!useGet) { xhrProxy(apiUrl, callback, true); }
+                    else { callback(new Error('All proxies failed'), null); }
+                    return;
+                }
+                if (useGet) {
+                    try { callback(null, JSON.parse(data.contents)); }
+                    catch (e) { callback(e, null); }
+                } else {
+                    callback(null, data);
+                }
+            }, 8000);
         }
 
-        function xhrProxyRaw(apiUrl, callback, idx) {
-            if (idx === undefined) idx = 0;
-            if (idx >= PROXIES.length) { callback(new Error('All proxies failed'), null); return; }
-            var url = PROXIES[idx] + encodeURIComponent(apiUrl);
+        function xhrProxyRaw(apiUrl, callback, useGet) {
+            var url = useGet
+                ? 'https://api.allorigins.win/get?url=' + encodeURIComponent(apiUrl)
+                : 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
+
             var req = new XMLHttpRequest();
+            var done = false;
             req.open('GET', url, true);
             req.onreadystatechange = function() {
+                if (done) return;
                 if (req.readyState === 4) {
-                    if (req.status === 200) { callback(null, req.responseText); }
-                    else { xhrProxyRaw(apiUrl, callback, idx + 1); }
+                    done = true;
+                    if (req.status === 200) {
+                        if (useGet) {
+                            try { callback(null, JSON.parse(req.responseText).contents); }
+                            catch (e) { callback(e, null); }
+                        } else { callback(null, req.responseText); }
+                    } else {
+                        if (!useGet) { xhrProxyRaw(apiUrl, callback, true); }
+                        else { callback(new Error('All proxies failed'), null); }
+                    }
                 }
             };
-            req.onerror = function() { xhrProxyRaw(apiUrl, callback, idx + 1); };
+            req.onerror = function() {
+                if (!done) {
+                    done = true;
+                    if (!useGet) { xhrProxyRaw(apiUrl, callback, true); }
+                    else { callback(new Error('All proxies failed'), null); }
+                }
+            };
+            setTimeout(function() { if (!done) { done = true; req.abort(); if (!useGet) { xhrProxyRaw(apiUrl, callback, true); } else { callback(new Error('Timeout'), null); } } }, 8000);
             req.send();
         }
 
